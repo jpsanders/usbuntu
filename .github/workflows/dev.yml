@@ -1,0 +1,59 @@
+---
+name: python-template-ci
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - '*'
+  # Run CI manually
+  workflow_dispatch:
+
+jobs:
+  lint:
+    uses: "./.github/workflows/python-checks.yml"
+    secrets:
+      # This will allow installing pip packages from a package repository.
+      package-repo: ${{ secrets.PKG_REPOSITORY }}
+  test:
+    needs: lint
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    uses: "./.github/workflows/python-tests.yml"
+    with:
+      python-version: ${{ matrix.python-version }}
+    secrets:
+      # This will allow installing pip packages from a package repository.
+      package-repo: ${{ secrets.PKG_REPOSITORY }}
+  test_with_db:
+    needs: lint
+    uses: "./.github/workflows/python-tests-with-db.yml"
+    secrets:
+      # This will allow installing pip packages from a package repository.
+      package-repo: ${{ secrets.PKG_REPOSITORY }}
+  # Proves the template still works after "Use this template" and a rename.
+  rename:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v7
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: "Rename the package the way a new repository would"
+        run: |
+          python scripts/rename.py acme_widgets
+          test -d src/acme_widgets && test ! -d src/python_template
+
+      - name: "Install and run every check under the new name"
+        run: |
+          make init-dev
+          make checks
+          acme-widgets

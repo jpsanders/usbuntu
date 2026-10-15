@@ -1,0 +1,55 @@
+---
+# This is nearly identical to `python-tests-with-db.yml` and both should be updated in tandem where appropriate.
+name: python-tests
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        default: "3.12"
+
+      cache-dependency-path:
+        type: string
+        default: "pyproject.toml"
+
+      enable-lfs:
+        type: boolean
+        default: false
+
+      checkout-fetch-depth:
+        type: number
+        default: 1
+
+    secrets:
+      package-repo:
+        description: "Package repository authentication token"
+        required: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v7
+        with:
+          lfs: ${{ inputs.enable-lfs }}
+          fetch-depth: ${{ inputs.checkout-fetch-depth }}
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+          cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+      - name: "Install dependencies"
+        env:
+          PIP_EXTRA_INDEX_URL: ${{ secrets.package-repo }}
+        run: |
+          make init-dev
+
+      - name: "Run tests"
+        run: |
+          make pytest
