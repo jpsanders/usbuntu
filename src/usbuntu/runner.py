@@ -27,7 +27,7 @@ def run(command: Sequence[str], *, capture: bool = False, check: bool = True) ->
     """
     printed = _show(command)
     print(f"+ {printed}", file=sys.stderr)
-    return subprocess.run(  # nosec B603 B607: argument list form, no shell, trusted binary names
+    return subprocess.run(  # nosec B603: fixed argument list, no shell
         list(command),
         check=check,
         capture_output=capture,
@@ -44,7 +44,7 @@ def try_run(command: Sequence[str]) -> subprocess.CompletedProcess[str]:
     """
     printed = _show(command)
     print(f"+ {printed} (allowed to fail)", file=sys.stderr)
-    return subprocess.run(  # nosec B603 B607: argument list form, no shell, trusted binary names
+    return subprocess.run(  # nosec B603: fixed argument list, no shell
         list(command),
         check=False,
         capture_output=True,
@@ -66,7 +66,7 @@ def run_stdin(command: Sequence[str], text: str) -> subprocess.CompletedProcess[
     """
     printed = _show(command)
     print(f"+ {printed} <script on stdin, not logged>", file=sys.stderr)
-    return subprocess.run(  # nosec B603 B607: argument list form, no shell, trusted binary names
+    return subprocess.run(  # nosec B603: fixed argument list, no shell
         list(command),
         check=True,
         capture_output=True,

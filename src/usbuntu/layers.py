@@ -1,17 +1,18 @@
-"""Selection of the squashfs layers that make up a full Ubuntu system.
+"""
+Selection of the squashfs layers that make up a full Ubuntu system.
 
 Ubuntu desktop ISOs since 24.04 are built as a stack of squashfs overlay
 layers instead of one filesystem image:
 
-* a base layer, such as ``minimal.squashfs`` (26.04) or ``ubuntu-desktop-minimal.squashfs`` (24.04)
-* a full-desktop layer on top, such as ``minimal.standard.squashfs``
-* tiny per-language layers, such as ``minimal.standard.en.squashfs``
-* special layers that must never land on an installed stick:
+*   a base layer, such as ``minimal.squashfs`` (26.04) or ``ubuntu-desktop-minimal.squashfs`` (24.04)
+*   a full-desktop layer on top, such as ``minimal.standard.squashfs``
+*   tiny per-language layers, such as ``minimal.standard.en.squashfs``
+*   special layers that must never land on an installed stick:
 
-  * ``*.live.*`` exists only for the live session
-  * ``*.enhanced-secureboot.*`` whiteouts out the deb kernel in ``/boot``
-    in favour of Ubuntu's snapd-managed boot flow, which conflicts with a
-    classic GRUB install
+    *   ``*.live.*`` exists only for the live session
+    *   ``*.enhanced-secureboot.*`` whiteouts out the deb kernel in ``/boot``
+        in favour of Ubuntu's snapd-managed boot flow, which conflicts with a
+        classic GRUB install
 
 This module walks the layer tree and returns the chain for the requested
 flavour and language, bottom layer first.
@@ -128,9 +129,7 @@ def build_chain(layers: Mapping[str, int], flavor: str, language: str) -> list[s
     if flavor == "full":
         tier = _structural_child(base, layers)
         if tier is None:
-            raise LayerError(
-                f"the ISO has no full desktop layer on top of {base!r}; try --flavor minimal"
-            )
+            raise LayerError(f"the ISO has no full desktop layer on top of {base!r}; try --flavor minimal")
         chain.append(tier)
     for parent in list(chain):
         language_layer = _language_child(parent, layers, language)

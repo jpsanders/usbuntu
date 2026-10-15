@@ -7,7 +7,9 @@ import pytest
 from usbuntu.grub import BootError, check_esp, early_cfg, mtab, place_signed_binaries
 
 
-def _shipped_tree(root: Path, shim: bytes = b"shim-bytes", grub_bytes: bytes = b"grub-bytes", mm: bytes = b"mm") -> Path:
+def _shipped_tree(
+    root: Path, shim: bytes = b"shim-bytes", grub_bytes: bytes = b"grub-bytes", mm: bytes = b"mm"
+) -> Path:
     """
     Create a target root with the shipped signed binaries.
 

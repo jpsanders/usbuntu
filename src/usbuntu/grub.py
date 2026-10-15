@@ -1,17 +1,18 @@
-"""GRUB configuration and the signed bootloader verification.
+"""
+GRUB configuration and the signed bootloader verification.
 
 Two hard-won rules live here.
 
-1. ``grub-install`` inside a chroot cannot see the ESP through the host's
-   ``/proc``, and silently falls back to writing a locally built, unsigned
-   GRUB image to ``EFI/BOOT/BOOTX64.EFI``. That image carries no embedded
-   config, so the stick boots to a bare ``grub>`` prompt. The fix is to copy
-   the genuine signed binaries from the target system's own packages and
-   verify them with md5sums, every install, no exceptions.
+1.  ``grub-install`` inside a chroot cannot see the ESP through the host's
+    ``/proc``, and silently falls back to writing a locally built, unsigned
+    GRUB image to ``EFI/BOOT/BOOTX64.EFI``. That image carries no embedded
+    config, so the stick boots to a bare ``grub>`` prompt. The fix is to copy
+    the genuine signed binaries from the target system's own packages and
+    verify them with md5sums, every install, no exceptions.
 
-2. ``update-grub`` in the chroot needs a truthful ``/etc/mtab`` file listing
-   the target's own root and ESP, otherwise ``grub-probe`` reads the host's
-   root UUID into the generated configuration.
+2.  ``update-grub`` in the chroot needs a truthful ``/etc/mtab`` file listing
+    the target's own root and ESP, otherwise ``grub-probe`` reads the host's
+    root UUID into the generated configuration.
 """
 
 import hashlib
@@ -37,9 +38,7 @@ def early_cfg(root_uuid: str, hint: str = "hd0,gpt2") -> str:
     :returns: The contents of ``EFI/BOOT/grub.cfg``
     """
     return (
-        f"search.fs_uuid {root_uuid} root {hint} \n"
-        "set prefix=($root)'/boot/grub'\n"
-        "configfile $prefix/grub.cfg\n"
+        f"search.fs_uuid {root_uuid} root {hint} \n" "set prefix=($root)'/boot/grub'\n" "configfile $prefix/grub.cfg\n"
     )
 
 
@@ -61,7 +60,7 @@ def _md5(path: Path) -> str:
     :param path: The file to hash
     :returns: The hexadecimal md5 digest
     """
-    digest = hashlib.md5()  # nosec B324: md5 is used only to compare two local copies of a file
+    digest = hashlib.md5(usedforsecurity=False)  # md5 compares two local copies of one file
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)

@@ -16,6 +16,7 @@ LAYERS_2604 = {
     "minimal.enhanced-secureboot.no-languages": 2_100_000,
     "minimal.standard": 563_000_000,
     "minimal.standard.en": 2_900_000,
+    "minimal.standard.no-languages": 2_900_000,
     "minimal.standard.enhanced-secureboot": 2_400_000,
     "minimal.standard.enhanced-secureboot.en": 2_900_000,
     "minimal.standard.live": 757_000_000,

@@ -1,4 +1,5 @@
-"""usbuntu - install a complete Ubuntu system on a USB stick from an ISO.
+"""
+usbuntu - install a complete Ubuntu system on a USB stick from an ISO.
 
 usbuntu turns a desktop ISO into a full, persistent Ubuntu installation on a
 USB flash drive without booting an installer. The result boots like a normal
