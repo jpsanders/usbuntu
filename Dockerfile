@@ -17,4 +17,4 @@ COPY --chown=$USER:$GROUP src src
 COPY --chown=$USER:$GROUP pyproject.toml .
 RUN --mount=source=.git,target=.git,type=bind \
     python3 -m pip install .
-CMD ["python-template"]
+CMD ["usbuntu"]
