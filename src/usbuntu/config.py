@@ -1,5 +1,7 @@
 """The install configuration and its validation."""
 
+from __future__ import annotations
+
 import json
 import re
 import secrets
@@ -84,8 +86,10 @@ class InstallConfig:
             lines.append(f"Apt:       {', '.join(self.apt_packages)}")
         if self.extras:
             lines.append(f"Extras:    {', '.join(self.extras)}")
-        lines.append("Password:   set at the command line or generated, change "
-                     f"{'forced at first login' if self.force_password_change else 'not forced'}")
+        lines.append(
+            "Password:   set at the command line or generated, change "
+            f"{'forced at first login' if self.force_password_change else 'not forced'}"
+        )
         return "\n".join(lines)
 
     def to_json(self) -> str:

@@ -1,8 +1,11 @@
-"""Discovery of the USB devices safe to wipe, using lsblk JSON output.
+r"""
+Discovery of the USB devices safe to wipe, using lsblk JSON output.
 
 Mount points are read from JSON, never from lsblk's text mode: the text mode
-escapes spaces as ``\\x20`` and parsing it once broke a real install.
+escapes spaces as ``\x20`` and parsing it once broke a real install.
 """
+
+from __future__ import annotations
 
 import json
 from collections.abc import Iterator
@@ -116,7 +119,7 @@ def iter_devices(devices: list[BlockDevice]) -> Iterator[BlockDevice]:
     Walk a device tree depth first.
 
     :param devices: The top level devices
-    :returns: Every device and child, in tree order
+    :yields: Every device and child, in tree order
     """
     for device in devices:
         yield device
@@ -134,10 +137,7 @@ def install_targets(devices: list[BlockDevice], min_gib: int = MIN_TARGET_GIB) -
     return [
         device
         for device in devices
-        if device.kind == "disk"
-        and device.tran == "usb"
-        and device.removable
-        and device.size >= min_gib * 1024**3
+        if device.kind == "disk" and device.tran == "usb" and device.removable and device.size >= min_gib * 1024**3
     ]
 
 
@@ -156,18 +156,14 @@ def find_target(device_argument: str | None, devices: list[BlockDevice], min_gib
         for device in iter_devices(devices):
             if device.name == wanted and device.kind == "disk":
                 if device.tran != "usb" or not device.removable:
-                    raise ValueError(
-                        f"{device.path} is not a removable USB device, refusing to touch it"
-                    )
+                    raise ValueError(f"{device.path} is not a removable USB device, refusing to touch it")
                 if device.size < min_gib * 1024**3:
                     raise ValueError(f"{device.path} is smaller than {min_gib} GiB")
                 return device
         raise ValueError(f"no disk named {device_argument} found")
     candidates = install_targets(devices, min_gib)
     if not candidates:
-        raise ValueError(
-            "no removable USB disk found; plug the stick in or pass --device explicitly"
-        )
+        raise ValueError("no removable USB disk found; plug the stick in or pass --device explicitly")
     if len(candidates) > 1:
         listing = "\n".join(f"  {device.describe()}" for device in candidates)
         raise ValueError(f"more than one removable USB disk:\n{listing}\npass --device to choose one")

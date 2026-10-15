@@ -1,7 +1,7 @@
 """Tests for the block device discovery."""
 
 import json
-import textwrap
+from typing import Any
 
 import pytest
 
@@ -16,51 +16,84 @@ def _lsblk_output() -> str:
 
     :returns: lsblk JSON text
     """
-    return textwrap.dedent(
-        f"""
-        {{
-          "blockdevices": [
-            {{
-              "name": "sda", "size": {57 * GIB}, "type": "disk", "tran": "usb", "rm": true,
-              "fstype": null, "label": "Ubuntu 18.04.6 LTS amd64", "model": "Ultra USB 3.0",
-              "mountpoint": null,
-              "children": [
-                {{
-                  "name": "sda1", "size": {GIB}, "type": "part", "tran": "usb", "rm": true,
-                  "fstype": "vfat", "label": "USBEFI", "model": null,
-                  "mountpoint": "/media/james-sanders/USBEFI", "children": []
-                }},
-                {{
-                  "name": "sda2", "size": {56 * GIB}, "type": "part", "tran": "usb", "rm": true,
-                  "fstype": "ext4", "label": "USBROOT", "model": null,
-                  "mountpoint": "/media/james-sanders/USBROOT", "children": []
-                }}
-              ]
-            }},
-            {{
-              "name": "sdb", "size": {1800 * GIB}, "type": "disk", "tran": "usb", "rm": false,
-              "fstype": null, "label": "PredatorRecovery", "model": "External Drive",
-              "mountpoint": "/media/james-sanders/PredatorRecovery", "children": []
-            }},
-            {{
-              "name": "nvme0n1", "size": {953 * GIB}, "type": "disk", "tran": "nvme", "rm": false,
-              "fstype": null, "label": null, "model": "SAMSUNG MZVL21T0HCLR-00BH1",
-              "mountpoint": null,
-              "children": [
-                {{
-                  "name": "nvme0n1p1", "size": {GIB}, "type": "part", "tran": "nvme", "rm": false,
-                  "fstype": "vfat", "label": null, "model": null,
-                  "mountpoint": "/boot/efi", "children": []
-                }}
-              ]
-            }}
-          ]
-        }}
-        """
-    )
+    stick = {
+        "name": "sda",
+        "size": 57 * GIB,
+        "type": "disk",
+        "tran": "usb",
+        "rm": True,
+        "fstype": None,
+        "label": "Ubuntu 18.04.6 LTS amd64",
+        "model": "Ultra USB 3.0",
+        "mountpoint": None,
+        "children": [
+            {
+                "name": "sda1",
+                "size": GIB,
+                "type": "part",
+                "tran": "usb",
+                "rm": True,
+                "fstype": "vfat",
+                "label": "USBEFI",
+                "model": None,
+                "mountpoint": "/media/james-sanders/USBEFI",
+                "children": [],
+            },
+            {
+                "name": "sda2",
+                "size": 56 * GIB,
+                "type": "part",
+                "tran": "usb",
+                "rm": True,
+                "fstype": "ext4",
+                "label": "USBROOT",
+                "model": None,
+                "mountpoint": "/media/james-sanders/USBROOT",
+                "children": [],
+            },
+        ],
+    }
+    external = {
+        "name": "sdb",
+        "size": 1800 * GIB,
+        "type": "disk",
+        "tran": "usb",
+        "rm": False,
+        "fstype": None,
+        "label": "PredatorRecovery",
+        "model": "External Drive",
+        "mountpoint": "/media/james-sanders/PredatorRecovery",
+        "children": [],
+    }
+    internal = {
+        "name": "nvme0n1",
+        "size": 953 * GIB,
+        "type": "disk",
+        "tran": "nvme",
+        "rm": False,
+        "fstype": None,
+        "label": None,
+        "model": "SAMSUNG MZVL21T0HCLR-00BH1",
+        "mountpoint": None,
+        "children": [
+            {
+                "name": "nvme0n1p1",
+                "size": GIB,
+                "type": "part",
+                "tran": "nvme",
+                "rm": False,
+                "fstype": "vfat",
+                "label": None,
+                "model": None,
+                "mountpoint": "/boot/efi",
+                "children": [],
+            }
+        ],
+    }
+    return json.dumps({"blockdevices": [stick, external, internal]})
 
 
-def _devices() -> list:
+def _devices() -> list[Any]:
     """Parse the standard fixture tree."""
     return parse_lsblk(_lsblk_output())
 

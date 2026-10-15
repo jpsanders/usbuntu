@@ -1,6 +1,7 @@
 """Tests for the install configuration and the extras registry."""
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -18,7 +19,7 @@ def _config(tmp_path: Path, **overrides: object) -> InstallConfig:
     """
     iso = tmp_path / "ubuntu.iso"
     iso.write_bytes(b"")
-    values: dict = {
+    values: dict[str, Any] = {
         "iso_path": iso,
         "device": None,
         "username": "james-sanders",

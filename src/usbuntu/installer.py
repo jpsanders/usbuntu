@@ -1,16 +1,17 @@
-"""The install pipeline: from ISO file to a bootable stick.
+"""
+The install pipeline: from ISO file to a bootable stick.
 
 Runs as root. Every step that bit during development of this tool is called
 out in the module docstring of :mod:`usbuntu.layers` and :mod:`usbuntu.grub`:
 
-* the layer chain excludes the ``live`` and ``enhanced-secureboot`` layers
-* the overlay is stacked with overlayfs and copied with ``rsync -aHAX``,
-  never extracted per-layer with unsquashfs, which trips over cross-layer
-  hardlinks
-* chrooted GRUB tools get a truthful ``/etc/mtab``
-* the ESP binaries are md5-verified against the target's own shipped signed
-  files after grub-install, and replaced when grub-install wrote its own
-  unsigned image
+*   the layer chain excludes the ``live`` and ``enhanced-secureboot`` layers
+*   the overlay is stacked with overlayfs and copied with ``rsync -aHAX``,
+    never extracted per-layer with unsquashfs, which trips over cross-layer
+    hardlinks
+*   chrooted GRUB tools get a truthful ``/etc/mtab``
+*   the ESP binaries are md5-verified against the target's own shipped signed
+    files after grub-install, and replaced when grub-install wrote its own
+    unsigned image
 """
 
 import hashlib
@@ -74,6 +75,12 @@ class Installer:
         self.disk = find_target(config.device, list_devices(), MIN_STICK_GIB)
         self.layout: _Layout | None = None
 
+    def _layout(self) -> _Layout:
+        """Return the layout, or fail loudly when the phases ran out of order."""
+        if self.layout is None:
+            raise RuntimeError("internal error: the layout is not set, a phase ran out of order")
+        return self.layout
+
     # ------------------------------------------------------------- pipeline
 
     def run(self) -> None:
@@ -114,18 +121,18 @@ class Installer:
         expected: str | None = None
         if sums_file.is_file():
             for line in sums_file.read_text(encoding="utf-8").splitlines():
-                digest, _, name = line.partition(" *")
+                listed, _, name = line.partition(" *")
                 if name == iso.name:
-                    expected = digest.strip()
+                    expected = listed.strip()
         if expected is None:
             _say(f"no checksum for {iso.name} in {sums_file}, skipping ISO verification")
             return
         _say(f"verifying {iso.name} against {sums_file.name}")
-        digest = hashlib.sha256()
+        hasher = hashlib.sha256()
         with iso.open("rb") as handle:
             for chunk in iter(lambda: handle.read(4 * 1024 * 1024), b""):
-                digest.update(chunk)
-        actual = digest.hexdigest()
+                hasher.update(chunk)
+        actual = hasher.hexdigest()
         if actual != expected:
             raise RuntimeError(f"ISO checksum mismatch: expected {expected}, got {actual}")
         _say("ISO checksum OK")
@@ -231,7 +238,7 @@ class Installer:
 
     def _copy(self) -> None:
         """Stack the ISO layers as overlayfs and rsync the merged view onto the stick."""
-        assert self.layout is not None
+        layout = self._layout()
         ISO_MNT.mkdir(parents=True, exist_ok=True)
         run(["mount", "-o", "loop,ro", str(self.config.iso_path), str(ISO_MNT)], capture=True)
         iso_layers = self._iso_layers()
@@ -242,7 +249,15 @@ class Installer:
             mount_dir = LAYERS_MNT / str(index)
             mount_dir.mkdir(parents=True, exist_ok=True)
             run(
-                ["mount", "-o", "ro,loop", "-t", "squashfs", str(ISO_MNT / "casper" / f"{name}.squashfs"), str(mount_dir)],
+                [
+                    "mount",
+                    "-o",
+                    "ro,loop",
+                    "-t",
+                    "squashfs",
+                    str(ISO_MNT / "casper" / f"{name}.squashfs"),
+                    str(mount_dir),
+                ],
                 capture=True,
             )
             _say(f"mounted layer {index}/{len(chain)}: {name}")
@@ -270,7 +285,7 @@ class Installer:
         _say(f"system copy complete: {total} filesystem entries")
         marker = {
             "chain": chain,
-            "root_uuid": self.layout.root_uuid,
+            "root_uuid": layout.root_uuid,
         }
         (TARGET / MARKER).write_text(json.dumps(marker), encoding="utf-8")
         run(["umount", str(MERGED_MNT)])
@@ -283,7 +298,7 @@ class Installer:
         """Run rsync with a progress report while it works."""
         command = ["rsync", "-aHAX", f"{source}/", f"{destination}/"]
         _say(f"+ {' '.join(command)}")
-        process = subprocess.Popen(  # nosec B603 B607: argument list form, no shell
+        process = subprocess.Popen(  # nosec B603: argument list form, no shell
             command,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
@@ -300,10 +315,10 @@ class Installer:
 
     def _configure_target(self) -> None:
         """Write the system configuration onto the target."""
-        assert self.layout is not None
-        esp_uuid = run(["blkid", "-s", "UUID", "-o", "value", self.layout.esp_device], capture=True).stdout.strip()
+        layout = self._layout()
+        esp_uuid = run(["blkid", "-s", "UUID", "-o", "value", layout.esp_device], capture=True).stdout.strip()
         (TARGET / "etc/fstab").write_text(
-            f"UUID={self.layout.root_uuid}  /          ext4  defaults    0 1\n"
+            f"UUID={layout.root_uuid}  /          ext4  defaults    0 1\n"
             f"UUID={esp_uuid}  /boot/efi  vfat  umask=0077  0 1\n",
             encoding="utf-8",
         )
@@ -347,7 +362,7 @@ class Installer:
             source = Path("/etc/default") / name
             if source.is_file():
                 (TARGET / "etc/default" / name).write_bytes(source.read_bytes())
-        (TARGET / "etc/mtab").write_text(grub.mtab(self.layout.root_device, self.layout.esp_device), encoding="utf-8")
+        (TARGET / "etc/mtab").write_text(grub.mtab(layout.root_device, layout.esp_device), encoding="utf-8")
         _say("system configuration written")
 
     def _binds_on(self) -> None:
@@ -417,36 +432,33 @@ class Installer:
 
     def _install_bootloader(self) -> None:
         """Write the early config and guarantee the genuine signed binaries on the ESP."""
-        assert self.layout is not None
+        layout = self._layout()
         esp_boot = ESP / "EFI/BOOT"
         esp_boot.mkdir(parents=True, exist_ok=True)
-        (esp_boot / "grub.cfg").write_text(grub.early_cfg(self.layout.root_uuid), encoding="utf-8")
+        (esp_boot / "grub.cfg").write_text(grub.early_cfg(layout.root_uuid), encoding="utf-8")
         _say("placing and verifying the signed shim and GRUB on the ESP")
         grub.place_signed_binaries(esp_boot, TARGET)
 
     def _verify(self) -> None:
         """Run the checks that decide whether the stick will boot."""
-        assert self.layout is not None
+        layout = self._layout()
         if not list(TARGET.glob("boot/vmlinuz-*")):
             raise RuntimeError("no kernel in the target's /boot")
         grub_cfg = TARGET / "boot/grub/grub.cfg"
-        if not grub_cfg.is_file() or self.layout.root_uuid not in grub_cfg.read_text(encoding="utf-8"):
+        if not grub_cfg.is_file() or layout.root_uuid not in grub_cfg.read_text(encoding="utf-8"):
             raise RuntimeError("grub.cfg is missing or does not reference the stick's root UUID")
         early = ESP / "EFI/BOOT/grub.cfg"
-        if self.layout.root_uuid not in early.read_text(encoding="utf-8"):
+        if layout.root_uuid not in early.read_text(encoding="utf-8"):
             raise RuntimeError("the ESP's early grub.cfg does not reference the stick's root UUID")
         files = sum(1 for path in TARGET.rglob("*") if path.is_file())
         if files < MIN_FILES_INSTALLED:
-            raise RuntimeError(
-                f"only {files} files copied, the layer stack produced a suspiciously small system"
-            )
+            raise RuntimeError(f"only {files} files copied, the layer stack produced a suspiciously small system")
         for check in grub.check_esp(ESP / "EFI/BOOT", TARGET):
             _say(f"ESP check: {check.esp_file} {'OK' if check.ok else 'MISMATCH'}")
         _say(f"all verification checks passed ({files} files installed)")
 
     def _close_layout(self) -> None:
         """Unmount everything and restore the standard mtab symlink."""
-        assert self.layout is not None
         self._binds_off()
         (TARGET / "etc/mtab").unlink(missing_ok=True)
         (TARGET / "etc/mtab").symlink_to("/proc/self/mounts")
@@ -462,8 +474,10 @@ class Installer:
         :param resumed: Whether the system copy was reused from a previous run
         """
         _say(f"DONE - full Ubuntu installed on {self.disk.path} (resumed: {resumed})")
-        _say(f"log in as {self.config.username}; you will be asked to set your own password"
-             + (" at first login" if self.config.force_password_change else ""))
+        _say(
+            f"log in as {self.config.username}; you will be asked to set your own password"
+            + (" at first login" if self.config.force_password_change else "")
+        )
         _say("reboot, press your firmware's boot menu key (often F12) and pick the USB drive")
 
 
@@ -472,6 +486,7 @@ def verify_device(device_argument: str) -> None:
     Check a stick that already holds an install and report what is wrong with it.
 
     :param device_argument: The device to check, such as ``/dev/sda``
+    :raises RuntimeError: When one or more boot checks fail
     """
     devices = list_devices()
     disk = find_target(device_argument, devices, min_gib=0)

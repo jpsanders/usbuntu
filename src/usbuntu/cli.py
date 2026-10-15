@@ -27,7 +27,7 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--version", action="version", version="usbuntu, version from git via setuptools_scm")
-    sub = parser.add_subparsers(dest="command")
+    sub = parser.add_subparsers(dest="command", required=True)
 
     install = sub.add_parser("install", help="install Ubuntu from an ISO onto a USB stick")
     install.add_argument("iso", type=Path, help="path to the Ubuntu desktop ISO")
@@ -45,7 +45,9 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="do not require a new password at first login",
     )
-    install.add_argument("--hostname", default="usb-ubuntu", help="machine name of the new system (default: usb-ubuntu)")
+    install.add_argument(
+        "--hostname", default="usb-ubuntu", help="machine name of the new system (default: usb-ubuntu)"
+    )
     install.add_argument("--language", default="en", help="language layers to include, such as en or pt (default: en)")
     flavor = install.add_mutually_exclusive_group()
     flavor.add_argument(
@@ -94,6 +96,7 @@ def _ask_password() -> str:
     Read a password twice from the terminal, or generate one when the user wants that.
 
     :returns: The chosen password
+    :raises SystemExit: When the two entries do not match
     """
     typed = getpass.getpass("Password for the new account (hidden, blank to generate one): ")
     if not typed:
@@ -116,7 +119,7 @@ def _confirm_or_exit(config: InstallConfig, description: str) -> None:
     """
     print(f"\n{description}\n")
     print(config.summary())
-    print(f"\nEverything on the device above is about to be destroyed.\n")
+    print("\nEverything on the device above is about to be destroyed.\n")
     if config.assume_yes:
         return
     if not sys.stdin.isatty():
@@ -127,12 +130,13 @@ def _confirm_or_exit(config: InstallConfig, description: str) -> None:
 
 
 def main() -> None:
-    """Parse the arguments and run the requested command."""
+    """
+    Parse the arguments and run the requested command.
+
+    :raises SystemExit: On a usage error, or when the user declines the wipe
+    """
     parser = _build_parser()
     args = parser.parse_args()
-    if args.command is None:
-        parser.print_help()
-        raise SystemExit(2)
 
     if args.command == "verify":
         if os.geteuid() != 0:
