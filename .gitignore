@@ -1,0 +1,13 @@
+# Make text search tools know that these "hidden" directories contain code
+!/.github/
+
+# Caches and build artifacts
+__pycache__
+/build
+.terraform
+.terraform.lock.hcl
+
+# Per-user config such as the following should generally be stored in ~/.gitignore rather than here
+#.python-version
+#.envrc
+

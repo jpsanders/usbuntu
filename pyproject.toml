@@ -1,0 +1,119 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools_scm[toml]>=9"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-template"
+authors = [
+  { name = "James Phillip Sanders", email = "jpsanders@tuta.io" }
+]
+maintainers = [
+  { name = "James Phillip Sanders", email = "jpsanders@tuta.io" }
+]
+description = "A Python package template with strict typing, eight checks and CI wired in."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+keywords = ["template", "packaging", "pyproject", "mypy", "pytest"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.urls]
+Repository = "https://github.com/jpsanders/python-package-template"
+Issues = "https://github.com/jpsanders/python-package-template/issues"
+
+[project.optional-dependencies]
+dev = [
+  "bandit[toml]",
+  "black",
+  "build",
+  "darglint",
+  "editorconfig-checker==2.7.2",
+  "flake8",
+  "flake8-pydocstyle",
+  "flake8-tidy-imports",
+  "isort",
+  "mypy>=1.4.1",
+  "pytest",
+  "pytest-cov",
+]
+
+[project.scripts]
+python-template = "python_template.python_pet:main"
+
+[tool.setuptools_scm]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+python_template = ["py.typed"]
+
+[tool.mypy]
+strict = true
+check_untyped_defs = true
+explicit_package_bases = true
+mypy_path = "src"
+cache_dir = "build/.mypy_cache"
+
+[[tool.mypy.overrides]]
+module = []
+ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["python_template"]
+
+[tool.black]
+line-length = 120
+include = '\.pyi?$'
+exclude = '''
+/(
+      venv
+    | \.git
+    | \.env
+    | \.venv
+    | \.tox
+    | env
+    | venv
+    | dist
+    | build
+)/
+'''
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+
+[tool.pydocstyle]
+### Ignoring explanation
+# D1 - Missing docstrings (enforced elsewhere)
+# D202 - No blank lines after function docstring
+# D203 - 1 blank line required before class docstring
+# D205 - 1 blank line required between summary line and description
+# D212 - Multi-line docstring summary should start at the first line
+# D406 - Section name should end with newline
+# D407 - Missing dashed underline after section
+# D411 - Missing blank line before section
+# D413 - Missing blank line after last section
+ignore = """
+D1,
+D202,D203,D205,D212,
+D400,D406,D407,D411,D413
+"""
+
+[tool.coverage.run]
+data_file = "build/.coverage"
+
+[tool.pytest.ini_options]
+cache_dir = "build/.pytest_cache"

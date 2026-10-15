@@ -1,0 +1,108 @@
+---
+name: python-checks
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        default: "3.12"
+
+      cache-dependency-path:
+        type: string
+        default: "pyproject.toml"
+
+      enable-ec:
+        type: boolean
+        default: true
+
+      enable-black:
+        type: boolean
+        default: true
+
+      enable-isort:
+        type: boolean
+        default: true
+
+      enable-lint:
+        type: boolean
+        default: true
+
+      enable-docstyle:
+        type: boolean
+        default: true
+
+      enable-mypy:
+        type: boolean
+        default: true
+
+      enable-bandit:
+        type: boolean
+        default: true
+
+      checkout-fetch-depth:
+        type: number
+        default: 1
+
+    secrets:
+      package-repo:
+        description: "Package repository authentication token"
+        required: false
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: ${{ inputs.checkout-fetch-depth }}
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+          cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+      - name: "Install dependencies"
+        env:
+          PIP_EXTRA_INDEX_URL: ${{ secrets.package-repo }}
+        run: |
+          make init-dev
+
+      - name: "Run editorconfig-checker style checks"
+        if: ${{ inputs.enable-ec && (success() || failure()) }}
+        run: |
+          make ec
+
+      - name: "Run black style checks"
+        if: ${{ inputs.enable-black && (success() || failure()) }}
+        run: |
+          make black-check
+
+      - name: "Run isort import checks"
+        if: ${{ inputs.enable-isort && (success() || failure()) }}
+        run: |
+          make isort-check
+
+      - name: "Run bandit security checks"
+        if: ${{ inputs.enable-bandit && (success() || failure()) }}
+        run: |
+          make bandit
+
+      - name: "Run flake8 lint checks"
+        if: ${{ inputs.enable-lint && (success() || failure()) }}
+        run: |
+          make lint
+
+      - name: "Run docstring checks"
+        if: ${{ inputs.enable-docstyle && (success() || failure()) }}
+        run: |
+          make docstyle
+
+      - name: "Run mypy static type checks"
+        if: ${{ inputs.enable-mypy && (success() || failure()) }}
+        run: |
+          make mypy
