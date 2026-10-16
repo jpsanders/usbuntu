@@ -5,10 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "usbuntu"
 authors = [
-  { name = "James Phillip Sanders", email = "jpsanders@tuta.io" }
+  { name = "James Phillip Sanders", email = "hello@jamesphillipsanders.com" }
 ]
 maintainers = [
-  { name = "James Phillip Sanders", email = "jpsanders@tuta.io" }
+  { name = "James Phillip Sanders", email = "hello@jamesphillipsanders.com" }
 ]
 description = "Install a complete, bootable Ubuntu system on a USB stick from an ISO, straight from the terminal."
 readme = "README.md"
