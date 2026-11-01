@@ -66,10 +66,17 @@ def run_stdin(command: Sequence[str], text: str) -> subprocess.CompletedProcess[
     """
     printed = _show(command)
     print(f"+ {printed} <script on stdin, not logged>", file=sys.stderr)
-    return subprocess.run(  # nosec B603: fixed argument list, no shell
+    process = subprocess.run(  # nosec B603: fixed argument list, no shell
         list(command),
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
         input=text,
     )
+    if process.returncode != 0:
+        # The captured stderr is the only record of the failure, since the
+        # chroot output is never echoed while it runs. The script on stdin is
+        # not echoed by the shell, so secrets stay out of the terminal and log.
+        print(process.stderr, file=sys.stderr)
+        raise subprocess.CalledProcessError(process.returncode, process.args, process.stdout, process.stderr)
+    return process

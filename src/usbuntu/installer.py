@@ -362,6 +362,7 @@ class Installer:
             source = Path("/etc/default") / name
             if source.is_file():
                 (TARGET / "etc/default" / name).write_bytes(source.read_bytes())
+        (TARGET / "etc/mtab").unlink(missing_ok=True)
         (TARGET / "etc/mtab").write_text(grub.mtab(layout.root_device, layout.esp_device), encoding="utf-8")
         _say("system configuration written")
 
@@ -391,6 +392,10 @@ class Installer:
         lines = [
             "set -e",
             "export DEBIAN_FRONTEND=noninteractive LC_ALL=C HOME=/root",
+            # The live layers ship a file:///cdrom apt source for the ISO's own
+            # build; /cdrom never exists on the stick, so `apt-get update`
+            # aborts on it during the chroot and on the installed system alike.
+            "rm -f /etc/apt/sources.list.d/cdrom.sources",
             "if id ubuntu >/dev/null 2>&1; then userdel -r -f ubuntu 2>/dev/null || true; fi",
             "apt-get update",
             # Ubuntu 26.04 images ship this; it conflicts with a classic GRUB install.
@@ -427,6 +432,7 @@ class Installer:
             "echo 'grub-install reported a problem, the signed binaries will be placed by hand'",
         ]
         _say("configuring the system in a chroot (apt runs here, this takes a while)")
+        self._binds_on()
         run_stdin(["chroot", str(TARGET), "/bin/bash", "-se"], "\n".join(lines) + "\n")
         _say("chroot configuration complete")
 

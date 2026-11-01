@@ -4,7 +4,9 @@ import argparse
 import getpass
 import os
 import sys
+import time
 from pathlib import Path
+from typing import TextIO, cast
 
 from usbuntu.config import InstallConfig, generate_password
 from usbuntu.devices import find_target, list_devices
@@ -129,6 +131,58 @@ def _confirm_or_exit(config: InstallConfig, description: str) -> None:
         raise SystemExit("aborted, nothing was written")
 
 
+class _Tee:
+    """Write to the wrapped terminal stream and to the log file at the same time."""
+
+    def __init__(self, stream: TextIO, handle: TextIO) -> None:
+        """
+        Wrap a stream.
+
+        :param stream: The terminal stream to write through
+        :param handle: The open log file to write to as well
+        """
+        self.stream = stream
+        self.handle = handle
+
+    def write(self, text: str) -> int:
+        """
+        Write the text to both streams.
+
+        :param text: The text to write
+        :returns: The number of characters written to the terminal stream
+        """
+        written = self.stream.write(text)
+        self.handle.write(text)
+        self.handle.flush()
+        return written
+
+    def flush(self) -> None:
+        """Flush the terminal stream."""
+        self.stream.flush()
+
+    def fileno(self) -> int:
+        """Return the underlying file descriptor of the terminal stream."""
+        return self.stream.fileno()
+
+    def isatty(self) -> bool:
+        """Tell whether the terminal stream is a TTY."""
+        return self.stream.isatty()
+
+
+def _setup_log() -> None:
+    """Mirror standard output and standard error into a log file."""
+    log_path = Path("/var/log/usbuntu.log")
+    try:
+        handle = log_path.open("a", encoding="utf-8")
+    except OSError:
+        return
+    stamp = time.strftime("%F %T")
+    handle.write(f"\n=== usbuntu started {stamp}, pid {os.getpid()} ===\n")
+    sys.stdout = cast(TextIO, _Tee(sys.stdout, handle))
+    sys.stderr = cast(TextIO, _Tee(sys.stderr, handle))
+    print(f"log file: {log_path}")
+
+
 def main() -> None:
     """
     Parse the arguments and run the requested command.
@@ -137,6 +191,7 @@ def main() -> None:
     """
     parser = _build_parser()
     args = parser.parse_args()
+    _setup_log()
 
     if args.command == "verify":
         if os.geteuid() != 0:

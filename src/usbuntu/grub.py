@@ -21,7 +21,9 @@ from pathlib import Path
 
 SHIM_SOURCE = Path("usr/lib/shim/shimx64.efi.signed")
 GRUB_SOURCE = Path("usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed")
-MM_SOURCE = Path("usr/lib/shim/mmx64.efi.signed")
+# On Ubuntu 26.04 shim-signed ships the MokManager binary without the
+# ``.signed`` suffix (older releases shipped ``mmx64.efi.signed``).
+MM_SOURCE = Path("usr/lib/shim/mmx64.efi")
 ESP_BOOT_DIR = Path("EFI/BOOT")
 
 
