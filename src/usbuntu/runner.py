@@ -62,7 +62,7 @@ def run_stdin(command: Sequence[str], text: str) -> subprocess.CompletedProcess[
     :param command: The command and its arguments as a list
     :param text: The script or input written to the command's standard input
     :returns: The completed process with decoded stdout and stderr
-    :raises subprocess.CalledProcessError: When the command fails
+    :raises CalledProcessError: When the script returns a non-zero exit code
     """
     printed = _show(command)
     print(f"+ {printed} <script on stdin, not logged>", file=sys.stderr)

@@ -161,11 +161,19 @@ class _Tee:
         self.stream.flush()
 
     def fileno(self) -> int:
-        """Return the underlying file descriptor of the terminal stream."""
+        """
+        Return the underlying file descriptor of the terminal stream.
+
+        :returns: The descriptor number of the wrapped stream
+        """
         return self.stream.fileno()
 
     def isatty(self) -> bool:
-        """Tell whether the terminal stream is a TTY."""
+        """
+        Tell whether the terminal stream is a TTY.
+
+        :returns: True when the wrapped stream is a terminal
+        """
         return self.stream.isatty()
 
 

@@ -24,7 +24,7 @@ def _shipped_tree(
     shim_dir.mkdir(parents=True)
     grub_dir.mkdir(parents=True)
     (shim_dir / "shimx64.efi.signed").write_bytes(shim)
-    (shim_dir / "mmx64.efi.signed").write_bytes(mm)
+    (shim_dir / "mmx64.efi").write_bytes(mm)
     (grub_dir / "grubx64.efi.signed").write_bytes(grub_bytes)
     return root
 

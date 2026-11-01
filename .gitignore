@@ -3,7 +3,10 @@
 
 # Caches and build artifacts
 __pycache__
-/build
+/build/*
+!/build/egg_base/
+/build/egg_base/*
+!/build/egg_base/.gitkeep
 .terraform
 .terraform.lock.hcl
 
