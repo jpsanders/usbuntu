@@ -22,7 +22,8 @@ out of the box.
 uv tool install git+https://github.com/jpsanders/usbuntu
 ```
 
-`pipx install git+https://github.com/jpsanders/usbuntu` works too.
+`pipx install git+https://github.com/jpsanders/usbuntu` works too. From an existing clone, `make init`
+prepares the build directory first and installs the same way.
 
 ## Use
 
@@ -87,6 +88,14 @@ Every step in that pipeline exists because its absence broke a real install:
   browser in `--packages` if you want one.
 * A failed run costs nothing: the completed system copy is marked on the stick and the next run resumes
   from it instead of re-copying 7 GB.
+* Every run appends a log to `/var/log/usbuntu.log`: the commands, the phase messages, and the full
+  traceback, and, when the chroot fails, the real `apt` error. Diagnose from there instead of exit codes.
+* The completed copy makes later runs resume, but the desktop environment re-mounts the stick between
+  runs. Stop `gvfs-udisks2-volume-monitor` (session scope) and unmount by device before re-running, or
+  the resume probe reports no copy and the run starts over.
+* AI agents driving the install should read `SKILL.md` first: it encodes the safe device selection, the
+  confirmations to demand from the user, and the failure playbook.
+* The pipeline was verified end to end against the 26.04.1 desktop ISO (see the `1.0.0` release notes).
 * `make checks` runs the same eight checks CI runs: black, isort, editorconfig, darglint, flake8, mypy
   strict, bandit and pytest with coverage.
 
@@ -97,12 +106,13 @@ src/usbuntu/       the package, with py.typed so type checkers trust its hints
 tests/usbuntu/     pytest tests, mirroring the package
 .github/workflows/ CI: lint, then tests on Python 3.12, 3.13 and 3.14
 Makefile           every command in this file
+SKILL.md           the same flow as a skill file for AI agents
 ```
 
 ## Versions
 
-There is no version number in the code. setuptools_scm reads it from git. Tag a commit `v0.1.0` and
-`make build` writes a 0.1.0 wheel to `build/dist`.
+There is no version number in the code. setuptools_scm reads it from git. Tag a commit, say `1.2.0`, and
+`make build` writes a 1.2.0 wheel to `build/dist`.
 
 Issues and pull requests are welcome.
 
