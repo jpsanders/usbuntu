@@ -1,5 +1,13 @@
 # usbuntu
 
+[![CI](https://github.com/jpsanders/usbuntu/actions/workflows/dev.yml/badge.svg)](https://github.com/jpsanders/usbuntu/actions/workflows/dev.yml)
+[![GitHub release](https://img.shields.io/github/v/release/jpsanders/usbuntu)](https://github.com/jpsanders/usbuntu/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/downloads/)
+![Platform: Linux](https://img.shields.io/badge/platform-Linux-lightgrey.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Checked with mypy](https://img.shields.io/badge/mypy-checked-2A6DB2.svg)](https://mypy-lang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 Install a complete, bootable Ubuntu system on a USB stick from an ISO, straight from the terminal.
 
 `usbuntu` is not `dd`. A raw ISO copy gives you a live session that forgets everything. A normal install
