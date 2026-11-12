@@ -80,8 +80,8 @@ so a machine that boots from a stick cannot be told to erase itself. With more t
 
 ```text
 $ usbuntu devices
-/dev/nvme0n1    953.9 GiB  SAMSUNG MZVL21T0HCLR  refused: not on USB; not removable; holds the running system (/)
-/dev/sdb         14.3 GiB  SanDisk Cruzer Blade  ACCEPTED
+/dev/nvme0n1    476.9 GiB  Example NVMe SSD      refused: not on USB; not removable; holds the running system (/)
+/dev/sdb         14.3 GiB  Example USB stick     ACCEPTED
 ```
 
 ## With an AI agent
