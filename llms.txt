@@ -1,0 +1,13 @@
+# usbuntu
+
+> Install a complete, bootable, persistent Ubuntu desktop on a USB stick from an ISO, from the terminal. Not dd: it
+> unpacks the ISO's squashfs layers, configures the system in a chroot and installs the signed boot chain, verified.
+
+Install: `uv tool install git+https://github.com/jpsanders/usbuntu@1.2.0`. Use: `usbuntu devices` (safe targets, no
+root), then `sudo usbuntu install ubuntu.iso --username NAME --device /dev/sdX`, then `sudo usbuntu verify /dev/sdX`.
+
+## Docs
+
+- [Manual](https://github.com/jpsanders/usbuntu/blob/main/docs/MANUAL.md): every command, flag and failure mode
+- [Skill](https://github.com/jpsanders/usbuntu/blob/main/skills/usbuntu/SKILL.md): the rules an agent must follow
+- [README](https://github.com/jpsanders/usbuntu/blob/main/README.md)

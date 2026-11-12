@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "usbuntu",
+  "description": "A full, persistent Ubuntu on a USB stick, installed from the terminal.",
+  "owner": {
+    "name": "James Phillip Sanders",
+    "email": "hello@jamesphillipsanders.com"
+  },
+  "plugins": [
+    {
+      "name": "usbuntu",
+      "description": "A skill that drives usbuntu safely: the disk is never chosen silently and the wipe stays the user's call.",
+      "version": "1.2.0",
+      "source": "./",
+      "category": "development",
+      "homepage": "https://github.com/jpsanders/usbuntu"
+    }
+  ]
+}

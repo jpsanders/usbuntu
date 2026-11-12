@@ -7,7 +7,11 @@ on:
     inputs:
       python-version:
         type: string
-        default: "3.12"
+        default: "3.15"
+
+      os:
+        type: string
+        default: "ubuntu-latest"
 
       cache-dependency-path:
         type: string
@@ -28,7 +32,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os }}
 
     steps:
       - name: "Checkout code"

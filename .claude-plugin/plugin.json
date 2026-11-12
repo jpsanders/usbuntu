@@ -1,0 +1,14 @@
+{
+  "name": "usbuntu",
+  "description": "A skill for installing a full, persistent Ubuntu on a USB stick with usbuntu: safe disk choice, the wipe confirmation, resuming and verifying.",
+  "version": "1.2.0",
+  "author": {
+    "name": "James Phillip Sanders",
+    "email": "hello@jamesphillipsanders.com",
+    "url": "https://jamesphillipsanders.com"
+  },
+  "homepage": "https://github.com/jpsanders/usbuntu",
+  "repository": "https://github.com/jpsanders/usbuntu",
+  "license": "MIT",
+  "keywords": ["ubuntu", "usb", "installer", "persistent-usb", "grub", "secure-boot"]
+}

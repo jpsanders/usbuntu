@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from usbuntu.devices import find_target, install_targets, parse_lsblk
+from usbuntu.devices import BlockDevice, find_target, install_targets, parse_lsblk, refusal_reasons
 
 GIB = 1024**3
 
@@ -155,3 +155,24 @@ class TestFindTarget:
     def test_no_stick_plugged_in(self) -> None:
         with pytest.raises(ValueError, match="no removable USB disk"):
             find_target(None, [])
+
+
+def _disk(name: str, mount: str | None = None, tran: str = "usb", rm: bool = True, gib: int = 32) -> BlockDevice:
+    part = BlockDevice(name=f"{name}1", size=gib * 1024**3, kind="part", tran=None, removable=rm, mountpoint=mount)
+    return BlockDevice(name=name, size=gib * 1024**3, kind="disk", tran=tran, removable=rm, children=[part])
+
+
+def test_a_stick_holding_the_running_system_is_refused() -> None:
+    booted = _disk("sda", mount="/")
+    spare = _disk("sdb")
+    assert booted.system_mounts() == ["/"]
+    assert refusal_reasons(booted) == ["holds the running system (/)"]
+    assert install_targets([booted, spare]) == [spare]
+    with pytest.raises(ValueError, match="holds the running system"):
+        find_target("/dev/sda", [booted, spare])
+
+
+def test_refusal_reasons_name_every_problem() -> None:
+    internal = _disk("nvme0n1", tran="nvme", rm=False, gib=4)
+    assert refusal_reasons(internal) == ["not on USB", "not removable", "smaller than 8 GiB"]
+    assert refusal_reasons(_disk("sdc", mount="/media/stick")) == []

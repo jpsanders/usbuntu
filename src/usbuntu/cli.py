@@ -2,14 +2,18 @@
 
 import argparse
 import getpass
+import json
 import os
+import shutil
+import subprocess  # nosec B404: runs man with fixed arguments only
 import sys
 import time
+from importlib import metadata, resources
 from pathlib import Path
 from typing import TextIO, cast
 
 from usbuntu.config import InstallConfig, generate_password
-from usbuntu.devices import find_target, list_devices
+from usbuntu.devices import MIN_TARGET_GIB, find_target, list_devices, refusal_reasons
 from usbuntu.installer import Installer, inspect_iso, verify_device
 from usbuntu.packages import available
 
@@ -28,7 +32,7 @@ def _build_parser() -> argparse.ArgumentParser:
             "and works on any UEFI machine."
         ),
     )
-    parser.add_argument("--version", action="version", version="usbuntu, version from git via setuptools_scm")
+    parser.add_argument("--version", action="version", version=f"usbuntu {_version()}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     install = sub.add_parser("install", help="install Ubuntu from an ISO onto a USB stick")
@@ -90,7 +94,89 @@ def _build_parser() -> argparse.ArgumentParser:
     inspect.add_argument("iso", type=Path, help="path to the Ubuntu desktop ISO")
     inspect.add_argument("--flavor", choices=["full", "minimal"], default="full", help="chain to display")
     inspect.add_argument("--language", default="en", help="language code for the chain to display")
+
+    devices = sub.add_parser("devices", help="list the disks and say which ones usbuntu would accept; no root needed")
+    devices.add_argument("--json", action="store_true", help="print JSON")
+
+    sub.add_parser("guide", help="print the full manual, for people and agents")
+    man = sub.add_parser("man", help="show the man page")
+    man.add_argument("--install", action="store_true", help="install it so `man usbuntu` works")
+    man.add_argument("--raw", action="store_true", help="print the roff source")
     return parser
+
+
+def _version() -> str:
+    """
+    Read the installed version, which setuptools_scm takes from the git tag.
+
+    :returns: The version, or ``unknown`` in a source tree that was never installed
+    """
+    try:
+        return metadata.version("usbuntu")
+    except metadata.PackageNotFoundError:
+        return "unknown"
+
+
+def _data(name: str) -> str:
+    """
+    Read a file shipped in the package's data folder.
+
+    :param name: File name inside ``data``
+    :returns: Its text
+    """
+    return (resources.files("usbuntu") / "data" / name).read_text(encoding="utf-8")
+
+
+def _show_devices(as_json: bool) -> None:
+    """
+    List every disk with the reasons usbuntu would refuse it, if any.
+
+    :param as_json: Print JSON instead of a table
+    """
+    disks = [d for d in list_devices() if d.kind == "disk"]
+    rows = [
+        {
+            "device": d.path,
+            "size_bytes": d.size,
+            "model": d.model,
+            "transport": d.tran,
+            "removable": d.removable,
+            "accepted": not refusal_reasons(d),
+            "refused_because": refusal_reasons(d),
+        }
+        for d in disks
+    ]
+    if as_json:
+        print(json.dumps({"min_size_gib": MIN_TARGET_GIB, "disks": rows}))
+        return
+    for disk, row in zip(disks, rows):
+        verdict = "ACCEPTED" if row["accepted"] else "refused: " + "; ".join(cast(list[str], row["refused_because"]))
+        print(f"{disk.describe()}  {verdict}")
+    if not any(row["accepted"] for row in rows):
+        print("No disk is a safe target. Plug in a USB stick of at least 8 GiB.")
+
+
+def _man(install: bool, raw: bool) -> None:
+    """
+    Show the man page, print its roff source, or install it for ``man usbuntu``.
+
+    :param install: Write it to the per user man folder
+    :param raw: Print the roff source
+    """
+    page = _data("usbuntu.1")
+    if install:
+        base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+        target = Path(base) / "man" / "man1" / "usbuntu.1"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(page, encoding="utf-8")
+        print(f"installed {target}; open it with: man usbuntu")
+        return
+    man = shutil.which("man")
+    if man and sys.stdout.isatty() and not raw:
+        with resources.as_file(resources.files("usbuntu") / "data" / "usbuntu.1") as path:
+            subprocess.call([man, "-l", str(path)])  # nosec B603: man, fixed arguments
+        return
+    print(page, end="")
 
 
 def _ask_password() -> str:
@@ -199,6 +285,15 @@ def main() -> None:
     """
     parser = _build_parser()
     args = parser.parse_args()
+    if args.command == "guide":
+        print(_data("MANUAL.md"), end="")
+        return
+    if args.command == "man":
+        _man(args.install, args.raw)
+        return
+    if args.command == "devices":
+        _show_devices(args.json)
+        return
     _setup_log()
 
     if args.command == "verify":

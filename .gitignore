@@ -14,3 +14,8 @@ __pycache__
 #.python-version
 #.envrc
 
+
+# Local virtual environment and editor state
+/.venv
+/.idea
+/src/*.egg-info

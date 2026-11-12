@@ -3,7 +3,6 @@ TESTS := tests
 SCRIPTS := scripts
 ROOT_EC_FILES := $(wildcard *.yaml *.yml *.md) .github
 PACKAGE := usbuntu
-DOCKER_IMAGE := usbuntu:latest
 
 .PHONY: help
 help:
@@ -14,18 +13,13 @@ help:
 	@echo "    Use '-n' to do a dry run"
 	@echo "    Use '-k' to ignore failed targets and keep going"
 
-.PHONY: create-egg-base
-create-egg-base:
-	@echo
-	mkdir -p build/egg_base
-
 .PHONY: init
-init: create-egg-base
+init:
 	@echo
 	pip install -e .
 
 .PHONY: init-dev
-init-dev: create-egg-base
+init-dev:
 	@echo
 	pip install -e .[dev]
 
@@ -92,23 +86,24 @@ bandit:
 	@echo --- Bandit security checks ---
 	bandit -c pyproject.toml -f custom -r ${SRC} ${TESTS} ${SCRIPTS}
 
+.PHONY: man-check
+man-check:
+	@echo
+	@echo --- Man page and packaged manual up to date ---
+	python scripts/build_man.py --check
+
+# Build the man page and the packaged manual from docs/MANUAL.md
+.PHONY: man
+man:
+	@echo
+	@echo --- Build the man page ---
+	python scripts/build_man.py
+
 .PHONY: build
-build: clean create-egg-base
+build: clean
 	@echo
 	@echo --- Build package wheel ---
 	python -m build -o build/dist
-
-# Rename the package once, right after creating a repository from the template
-.PHONY: rename
-rename:
-	@test -n "$(NAME)" || (echo "usage: make rename NAME=your_package" && exit 1)
-	python scripts/rename.py $(NAME)
-
-.PHONY: build-docker
-build-docker:
-	@echo
-	@echo --- Docker build image ---
-	docker build -t ${DOCKER_IMAGE} --no-cache .
 
 .PHONY: clean
 clean:
@@ -118,4 +113,4 @@ clean:
 
 # Run all checking tools
 .PHONY: checks
-checks: isort-check black-check ec docstyle lint mypy bandit pytest
+checks: isort-check black-check ec docstyle lint mypy bandit man-check pytest

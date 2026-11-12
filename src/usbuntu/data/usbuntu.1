@@ -1,0 +1,164 @@
+.TH USBUNTU 1 "" "usbuntu" "User Commands"
+.SH NAME
+usbuntu \- install a complete, bootable Ubuntu system on a USB stick from an ISO, straight from the terminal
+.SH SYNOPSIS
+.RS 4
+.nf
+sudo usbuntu install ISO \-\-username NAME [options]
+sudo usbuntu inspect ISO [\-\-flavor full|minimal] [\-\-language CODE]
+sudo usbuntu verify DEVICE
+usbuntu devices [\-\-json]
+usbuntu guide
+usbuntu man [\-\-install | \-\-raw]
+usbuntu \-\-version
+.fi
+.RE
+.SH DESCRIPTION
+.PP
+usbuntu is not \fBdd\fR. A raw ISO copy gives a live session that forgets everything, and a normal install needs an installer boot first. usbuntu skips both: it unpacks the ISO's own system layers onto the stick, configures the system in a chroot, installs the genuine signed boot chain and verifies it, and leaves a full Ubuntu that keeps its files, takes updates and installs software. It boots on any UEFI machine, with Secure Boot on or off.
+.PP
+It needs root for \fBinstall\fR, \fBinspect\fR and \fBverify\fR, a stick of at least 8 GiB, and the host tools \fBparted\fR, \fBmkfs.fat\fR, \fBmkfs.ext4\fR, \fBrsync\fR, \fBblkid\fR and \fBfile\fR. Ubuntu desktop ISOs from 24.04 on are supported; the pipeline was verified end to end against the 26.04.1 desktop ISO.
+.SH COMMANDS
+.TP
+\fBinstall\fR
+Wipe the stick after a typed \fBWIPE\fR, then install Ubuntu from the ISO. About twenty minutes.
+.TP
+\fBinspect\fR
+Mount the ISO and show the layer chain an install would copy. Writes nothing.
+.TP
+\fBverify\fR
+Check the boot chain of a stick that already holds an install: kernels, root UUID, signed binaries.
+.TP
+\fBdevices\fR
+List every disk and say which ones usbuntu would accept as a target, and why the rest are refused.
+.TP
+\fBguide\fR
+Print this manual as Markdown, for people and agents.
+.TP
+\fBman\fR
+Show this manual as a man page. \fB\-\-install\fR puts it where \fBman usbuntu\fR finds it.
+.SH INSTALL OPTIONS
+.TP
+\fB\-\-username NAME\fR
+The account the new system logs in with. Required.
+.TP
+\fB\-\-password P\fR
+The starting password. Default: generated and printed at the end.
+.TP
+\fB\-\-no\-force\-password\-change\fR
+Keep the starting password; by default the first login asks for a new one.
+.TP
+\fB\-\-hostname NAME\fR
+The machine name. Default: usb-ubuntu.
+.TP
+\fB\-\-flavor full\fR
+\fBfull\fR desktop or the \fBminimal\fR one. Default: full.
+.TP
+\fB\-\-language CODE\fR
+Language layers to include, such as \fBen\fR or \fBpt\fR. Default: en.
+.TP
+\fB\-\-remove\-snap\fR
+Purge snapd and hold it back. Firefox and the Snap Store go with it.
+.TP
+\fB\-\-packages LIST\fR
+Extra apt packages, comma separated, such as \fBcurl,vim,git\fR.
+.TP
+\fB\-\-with NAME\fR
+A bundled extra: \fBopencode\fR, \fBclaude\-code\fR or \fBbuild\-tools\fR. Repeatable.
+.TP
+\fB\-\-device /dev/sdX\fR
+The target disk. Default: the one removable USB disk found; with several, this is required.
+.TP
+\fB\-\-yes\fR
+Do not ask for \fBWIPE\fR. Only for a run the user asked to be unattended.
+.TP
+\fB\-\-dry\-run\fR
+Print the plan and the target, write nothing.
+.SH HOW IT WORKS
+.PP
+Ubuntu desktop ISOs ship as a stack of squashfs overlay layers: a minimal base, a standard desktop layer, thin language layers, and two kinds of layer that must never reach an installed stick. usbuntu mounts the right chain with overlayfs and copies the merged view with \fBrsync \-aHAX\fR, the same path the official installer takes, minus the installer.
+.RS 4
+.nf
+ISO \-> squashfs layer chain \-> overlayfs merged view \-> rsync \-> stick
+                                           chroot: apt, account, GRUB
+                                           ESP: signed shim and signed GRUB, md5 verified
+.fi
+.RE
+.IP \(bu 2
+\fBLayer selection.\fR The live layer belongs to the live session only, and the enhanced secure boot layers hand the
+.PP
+boot chain to snapd. usbuntu keeps the classic GRUB path and always leaves both out.
+.IP \(bu 2
+\fBoverlayfs, not unsquashfs.\fR Extracting stacked layers one by one fails on hardlinks across layers.
+.IP \(bu 2
+\fBA truthful mtab.\fR Chrooted GRUB tools read the mount table; usbuntu writes one that names the stick.
+.IP \(bu 2
+\fBThe signed binaries, verified.\fR After every install the genuine signed shim and GRUB are copied from the target's
+.PP
+own packages and checked with md5, because a chrooted \fBgrub\-install\fR can write an unsigned image that boots to a bare \fBgrub>\fR prompt.
+.SH SAFETY
+.IP \(bu 2
+usbuntu refuses any disk that is not on USB, not removable, smaller than 8 GiB, or holds the running system (has
+.PP
+\fB/\fR, \fB/boot\fR, \fB/boot/efi\fR, \fB/usr\fR, \fB/var\fR, \fB/home\fR or swap on it). \fBusbuntu devices\fR shows the same verdicts.
+.IP \(bu 2
+With more than one acceptable disk, it refuses to guess and asks for \fB\-\-device\fR.
+.IP \(bu 2
+The wipe needs the user to type \fBWIPE\fR, unless \fB\-\-yes\fR was given.
+.IP \(bu 2
+The password reaches the new system through a pipe, never a file or a log. Omit \fB\-\-password\fR to be prompted.
+.SH RESUMING AFTER A FAILURE
+.PP
+A completed system copy is marked on the stick (\fB.usbuntu\-install.json\fR), and the next run resumes from it instead of copying about 7 GB again. The desktop re-mounts the stick between runs, so before a retry stop the monitor and unmount the failed run's leftovers, children first:
+.RS 4
+.nf
+systemctl \-\-user stop gvfs\-udisks2\-volume\-monitor.service
+sudo umount /mnt/usbuntu\-install/target/dev/pts /mnt/usbuntu\-install/target/run \e
+    /mnt/usbuntu\-install/target/sys /mnt/usbuntu\-install/target/proc \e
+    /mnt/usbuntu\-install/target/dev /mnt/usbuntu\-install/target/boot/efi /mnt/usbuntu\-install/target
+.fi
+.RE
+.PP
+With the leftovers mounted the resume probe fails, and the run starts fresh: it wipes the stick and copies again.
+.SH FILES
+.PP
+\fB/var/log/usbuntu.log\fR gets every command, phase message and traceback of each root run, and the real \fBapt\fR error when the chroot fails. Read it before anything else after a failure. \fB~/.local/share/man/man1/usbuntu.1\fR is where \fBman \-\-install\fR puts the man page.
+.SH EXIT STATUS
+.PP
+0 on success. Non zero when the arguments are wrong, the user declines the wipe, root is missing, or a step fails; the reason is printed and logged.
+.SH EXAMPLES
+.PP
+See which disks are safe targets, plan, then install:
+.RS 4
+.nf
+usbuntu devices
+sudo usbuntu install ubuntu\-26.04.1\-desktop\-amd64.iso \-\-username james \-\-device /dev/sdb \-\-dry\-run
+sudo PYTHONDONTWRITEBYTECODE=1 usbuntu install ubuntu\-26.04.1\-desktop\-amd64.iso \-\-username james \-\-device /dev/sdb
+sudo usbuntu verify /dev/sdb
+.fi
+.RE
+.PP
+Reboot, press the firmware boot menu key (often F12) and pick the stick.
+.SH FOR AGENTS
+.IP \(bu 2
+Never choose the target disk silently. Run \fBusbuntu devices \-\-json\fR, read the accepted disks' model, size and
+.PP
+device back to the user, and get an explicit go ahead. With more than one, always pass \fB\-\-device\fR.
+.IP \(bu 2
+The \fBWIPE\fR confirmation belongs to the user. Pass \fB\-\-yes\fR only when the user asked for an unattended run.
+.IP \(bu 2
+Never echo a password: omit \fB\-\-password\fR and let the tool prompt, or use the generated one it prints.
+.IP \(bu 2
+Prefix every sudo run with \fBPYTHONDONTWRITEBYTECODE=1\fR, or root writes bytecode into the user's tool environment.
+.IP \(bu 2
+Verify the ISO against its official \fBSHA256SUMS\fR first; usbuntu does it automatically when the file sits beside it.
+.IP \(bu 2
+After any failure, read \fB/var/log/usbuntu.log\fR. A good run ends with \fBDONE\fR, and \fBverify\fR ends with
+.PP
+\fBall boot checks passed\fR.
+.SH SEE ALSO
+.PP
+https://github.com/jpsanders/usbuntu
+.SH AUTHOR
+.PP
+James Phillip Sanders, https://jamesphillipsanders.com

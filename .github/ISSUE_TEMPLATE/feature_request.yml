@@ -1,0 +1,16 @@
+---
+name: Feature request
+description: An ISO, an option or a check usbuntu should support
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you cannot do today, and with which ISO.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help

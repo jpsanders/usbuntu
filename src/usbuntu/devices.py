@@ -15,6 +15,8 @@ from typing import Any
 from usbuntu.runner import run
 
 MIN_TARGET_GIB = 8
+# A disk with any of these mounted holds the running system, so it is never a target.
+SYSTEM_MOUNTS = ("/", "/boot", "/boot/efi", "/usr", "/var", "/home", "[SWAP]")
 
 
 @dataclass
@@ -51,6 +53,15 @@ class BlockDevice:
         if self.mountpoint:
             mounted.insert(0, self.path)
         return mounted
+
+    def system_mounts(self) -> list[str]:
+        """
+        List the mount points of this device and its children that belong to the running system.
+
+        :returns: Mount points such as ``/`` or ``[SWAP]``, empty when the disk is not in use by the system
+        """
+        found = [d.mountpoint for d in iter_devices([self]) if d.mountpoint in SYSTEM_MOUNTS]
+        return [m for m in found if m is not None]
 
     def describe(self) -> str:
         """
@@ -134,11 +145,27 @@ def install_targets(devices: list[BlockDevice], min_gib: int = MIN_TARGET_GIB) -
     :param min_gib: The smallest stick worth considering, in GiB
     :returns: The candidate devices
     """
-    return [
-        device
-        for device in devices
-        if device.kind == "disk" and device.tran == "usb" and device.removable and device.size >= min_gib * 1024**3
-    ]
+    return [device for device in devices if device.kind == "disk" and not refusal_reasons(device, min_gib)]
+
+
+def refusal_reasons(device: BlockDevice, min_gib: int = MIN_TARGET_GIB) -> list[str]:
+    """
+    Say why a disk may not be wiped. An empty list means it is a safe target.
+
+    :param device: A top level disk
+    :param min_gib: The smallest stick worth considering, in GiB
+    :returns: The reasons, in plain words
+    """
+    reasons = []
+    if device.tran != "usb":
+        reasons.append("not on USB")
+    if not device.removable:
+        reasons.append("not removable")
+    if device.size < min_gib * 1024**3:
+        reasons.append(f"smaller than {min_gib} GiB")
+    if device.system_mounts():
+        reasons.append("holds the running system (" + ", ".join(device.system_mounts()) + ")")
+    return reasons
 
 
 def find_target(device_argument: str | None, devices: list[BlockDevice], min_gib: int = MIN_TARGET_GIB) -> BlockDevice:
@@ -159,6 +186,8 @@ def find_target(device_argument: str | None, devices: list[BlockDevice], min_gib
                     raise ValueError(f"{device.path} is not a removable USB device, refusing to touch it")
                 if device.size < min_gib * 1024**3:
                     raise ValueError(f"{device.path} is smaller than {min_gib} GiB")
+                if device.system_mounts():
+                    raise ValueError(f"{device.path} holds the running system, refusing to touch it")
                 return device
         raise ValueError(f"no disk named {device_argument} found")
     candidates = install_targets(devices, min_gib)

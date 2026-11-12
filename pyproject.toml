@@ -14,26 +14,27 @@ description = "Install a complete, bootable Ubuntu system on a USB stick from an
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.12"
-keywords = ["ubuntu", "usb", "installer", "live-usb", "grub", "cli"]
+requires-python = ">=3.14"
+keywords = ["ubuntu", "usb", "installer", "live-usb", "persistent-usb", "grub", "secure-boot", "cli", "ai-agents"]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Intended Audience :: System Administrators",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Typing :: Typed",
 ]
 dependencies = []
 dynamic = ["version"]
 
 [project.urls]
+Homepage = "https://github.com/jpsanders/usbuntu"
 Repository = "https://github.com/jpsanders/usbuntu"
 Issues = "https://github.com/jpsanders/usbuntu/issues"
+Changelog = "https://github.com/jpsanders/usbuntu/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
@@ -55,12 +56,13 @@ dev = [
 usbuntu = "usbuntu.cli:main"
 
 [tool.setuptools_scm]
+fallback_version = "0.0.0"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-usbuntu = ["py.typed"]
+usbuntu = ["py.typed", "data/*"]
 
 [tool.mypy]
 strict = true

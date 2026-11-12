@@ -1,0 +1,27 @@
+---
+name: Bug report
+description: An install, inspect or verify run that failed or left a stick that does not boot
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran (without any password), what it did, and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: The end of /var/log/usbuntu.log
+      description: The last 60 lines or so. Remove anything private.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: iso
+    attributes:
+      label: ISO, stick and usbuntu version
+      placeholder: ubuntu-26.04.1-desktop-amd64.iso, 16 GiB SanDisk, usbuntu 1.2.0
+    validations:
+      required: true
