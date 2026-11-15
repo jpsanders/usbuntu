@@ -22,15 +22,42 @@ jobs:
         with:
           python-version: "3.15"
 
-      - name: "Check the README badge names this version"
-        run: grep -q "badge/release-${{ github.event.release.tag_name }}-" README.md
+      - name: "Check the README badge, the plugin and the changelog all name this version"
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          grep -q "badge/release-${TAG}-" README.md
+          grep -q "\"version\": \"${TAG}\"" .claude-plugin/plugin.json
+          grep -q "\"version\": \"${TAG}\"" .claude-plugin/marketplace.json
+          grep -q "^## ${TAG} " CHANGELOG.md
 
       - name: "Build the wheel and the sdist"
         run: |
           python -m pip install build
           python -m build -o dist
+          test -f "dist/usbuntu-${{ github.event.release.tag_name }}-py3-none-any.whl"
 
       - name: "Attach them to the release"
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber
+
+  # Trusted publishing: PyPI trusts this workflow in this repository, so no token is stored anywhere.
+  pypi:
+    needs: assets
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/usbuntu/
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: "Download the wheel and the sdist the release now carries"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release download "$TAG" -R "${{ github.repository }}" -D dist -p "usbuntu-*"
+
+      - name: "Publish to PyPI"
+        uses: pypa/gh-action-pypi-publish@release/v1

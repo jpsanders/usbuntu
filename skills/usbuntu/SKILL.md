@@ -32,10 +32,10 @@ machine that boots UEFI, and the host tools `parted`, `mkfs.fat`, `mkfs.ext4`, `
 ## Install the tool
 
 ```sh
-uv tool install git+https://github.com/jpsanders/usbuntu@1.2.0
+uv tool install usbuntu
 ```
 
-To update later: the same command with `--force` and the newer tag.
+To update later: `uv tool upgrade usbuntu`.
 
 ## Run
 

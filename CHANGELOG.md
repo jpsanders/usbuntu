@@ -2,6 +2,12 @@
 
 Versions follow [semantic versioning](https://semver.org). Tags carry the bare version, such as `1.2.0`.
 
+## 1.2.1 (2026-11-15)
+
+- On PyPI: `uv tool install usbuntu`, `pipx install usbuntu` or `pip install usbuntu`. Each GitHub release now
+  publishes itself to PyPI through trusted publishing; no token is stored.
+- The README's images and links are absolute, so the page reads the same on PyPI as on GitHub.
+
 ## 1.2.0 (2026-11-12)
 
 - Safer: usbuntu now refuses a disk that holds the running system (`/`, `/boot`, `/boot/efi`, `/usr`, `/var`,

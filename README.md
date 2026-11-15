@@ -1,19 +1,20 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/banner-dark.png">
-    <img alt="usbuntu: a full Ubuntu on a USB stick, straight from the terminal" src="docs/images/banner-light.png" width="100%">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpsanders/usbuntu/main/docs/images/banner-dark.png">
+    <img alt="usbuntu: a full Ubuntu on a USB stick, straight from the terminal" src="https://raw.githubusercontent.com/jpsanders/usbuntu/main/docs/images/banner-light.png" width="100%">
   </picture>
 </p>
 
 <p align="center">
   <a href="https://github.com/jpsanders/usbuntu/actions/workflows/dev.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/jpsanders/usbuntu/dev.yml?branch=main&label=CI&logo=github"></a>
-  <a href="https://github.com/jpsanders/usbuntu/releases/latest"><img alt="Release 1.2.0" src="https://img.shields.io/badge/release-1.2.0-a95719"></a>
+  <a href="https://github.com/jpsanders/usbuntu/releases/latest"><img alt="Release 1.2.1" src="https://img.shields.io/badge/release-1.2.1-a95719"></a>
+  <a href="https://pypi.org/project/usbuntu/"><img alt="PyPI usbuntu" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpypi.org%2Fpypi%2Fusbuntu%2Fjson&query=%24.info.version&label=pypi&logo=pypi&logoColor=white&color=a95719"></a>
   <a href="https://www.python.org/downloads/"><img alt="Python 3.14 and 3.15" src="https://img.shields.io/badge/python-3.14%20%7C%203.15-3776AB?logo=python&logoColor=white"></a>
   <img alt="Ubuntu 24.04 and later" src="https://img.shields.io/badge/ubuntu-24.04%2B-E95420?logo=ubuntu&logoColor=white">
   <img alt="Secure Boot on or off" src="https://img.shields.io/badge/secure%20boot-on%20or%20off-2ea44f">
-  <a href="#with-an-ai-agent"><img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-a95719"></a>
+  <a href="https://github.com/jpsanders/usbuntu#with-an-ai-agent"><img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-a95719"></a>
   <a href="https://mypy-lang.org/"><img alt="mypy strict" src="https://img.shields.io/badge/mypy-strict-2a6db2"></a>
-  <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-blue"></a>
+  <a href="https://github.com/jpsanders/usbuntu/blob/main/LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-blue"></a>
   <a href="https://github.com/jpsanders/usbuntu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/jpsanders/usbuntu?style=flat&logo=github&color=a95719"></a>
 </p>
 
@@ -25,7 +26,7 @@ bootloader, and hands you a full Ubuntu that keeps its files, takes updates and 
 in your pocket.
 
 ```sh
-uv tool install git+https://github.com/jpsanders/usbuntu@1.2.0
+uv tool install usbuntu
 usbuntu devices
 sudo usbuntu install ubuntu-26.04.1-desktop-amd64.iso --username you
 ```
@@ -38,10 +39,10 @@ It needs Python 3.14 or later on any Linux machine that can mount things; Ubuntu
 box, and uv fetches a Python if yours is older.
 
 ```sh
-uv tool install git+https://github.com/jpsanders/usbuntu@1.2.0
+uv tool install usbuntu
 ```
 
-`pipx install git+https://github.com/jpsanders/usbuntu@1.2.0` works too.
+`pip install usbuntu` and `pipx install usbuntu` work too.
 
 ## Use
 
@@ -94,7 +95,7 @@ never echo a password, read the log after a failure. Install it as a Claude Code
 ```
 
 On Claude Code before 2.1.275: `/plugin marketplace add jpsanders/usbuntu`, then `/plugin install usbuntu@usbuntu`.
-Other agents read [`skills/usbuntu/SKILL.md`](skills/usbuntu/SKILL.md) as it is. `usbuntu devices --json` gives an
+Other agents read [`skills/usbuntu/SKILL.md`](https://github.com/jpsanders/usbuntu/blob/main/skills/usbuntu/SKILL.md) as it is. `usbuntu devices --json` gives an
 agent the disk verdicts as data, and `usbuntu guide` prints the whole manual.
 
 There is no MCP server, on purpose: erasing a disk as root should stay a decision a person makes at a terminal.
@@ -142,7 +143,7 @@ Every step in that pipeline exists because its absence broke a real install:
 ## The manual
 
 `usbuntu guide` prints the full manual for people and agents, `usbuntu man` shows it as a man page, and
-`usbuntu man --install` makes `man usbuntu` work. The source is [`docs/MANUAL.md`](docs/MANUAL.md).
+`usbuntu man --install` makes `man usbuntu` work. The source is [`docs/MANUAL.md`](https://github.com/jpsanders/usbuntu/blob/main/docs/MANUAL.md).
 
 ## Develop
 
@@ -152,8 +153,8 @@ make checks
 ```
 
 `make checks` runs isort, black, editorconfig-checker, darglint, flake8, mypy in strict mode, bandit, the man page
-check and pytest with coverage, the same as CI. Tests never touch a real disk. See [CONTRIBUTING.md](CONTRIBUTING.md)
-and [AGENTS.md](AGENTS.md).
+check and pytest with coverage, the same as CI. Tests never touch a real disk. See [CONTRIBUTING.md](https://github.com/jpsanders/usbuntu/blob/main/CONTRIBUTING.md)
+and [AGENTS.md](https://github.com/jpsanders/usbuntu/blob/main/AGENTS.md).
 
 ## Star history
 
