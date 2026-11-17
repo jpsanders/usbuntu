@@ -42,7 +42,7 @@ dev = [
   "black",
   "build",
   "darglint",
-  "editorconfig-checker==2.7.2",
+  "editorconfig-checker==3.11.1",
   "flake8",
   "flake8-pydocstyle",
   "flake8-tidy-imports",
