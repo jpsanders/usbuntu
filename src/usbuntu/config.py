@@ -83,7 +83,11 @@ class InstallConfig:
             f"User:      {self.username}",
             f"Snap:      {'removed' if self.remove_snap else 'kept'}",
             "Secure Boot keys: "
-            + ("updated from Linux (secureboot-db on)" if self.allow_secure_boot_updates else "never written (secureboot-db masked)"),
+            + (
+                "updated from Linux (secureboot-db on)"
+                if self.allow_secure_boot_updates
+                else "never written (secureboot-db masked)"
+            ),
         ]
         if self.apt_packages:
             lines.append(f"Apt:       {', '.join(self.apt_packages)}")

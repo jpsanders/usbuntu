@@ -49,6 +49,7 @@ was verified end to end against the 26.04.1 desktop ISO.
 | `--flavor full` | `full` desktop or the `minimal` one. Default: full. |
 | `--language CODE` | Language layers to include, such as `en` or `pt`. Default: en. |
 | `--remove-snap` | Purge snapd and hold it back. Firefox and the Snap Store go with it. |
+| `--allow-secure-boot-updates` | Keep `secureboot-db.service` on, so the stick appends Secure Boot dbx updates to every PC it boots. Off by default: such a write trips BitLocker recovery on Windows PCs. |
 | `--packages LIST` | Extra apt packages, comma separated, such as `curl,vim,git`. |
 | `--with NAME` | A bundled extra: `opencode`, `claude-code` or `build-tools`. Repeatable. |
 | `--device /dev/sdX` | The target disk. Default: the one removable USB disk found; with several, this is required. |

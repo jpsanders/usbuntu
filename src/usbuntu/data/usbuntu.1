@@ -60,6 +60,9 @@ Language layers to include, such as \fBen\fR or \fBpt\fR. Default: en.
 \fB\-\-remove\-snap\fR
 Purge snapd and hold it back. Firefox and the Snap Store go with it.
 .TP
+\fB\-\-allow\-secure\-boot\-updates\fR
+Keep \fBsecureboot\-db.service\fR on, so the stick appends Secure Boot dbx updates to every PC it boots. Off by default: such a write trips BitLocker recovery on Windows PCs.
+.TP
 \fB\-\-packages LIST\fR
 Extra apt packages, comma separated, such as \fBcurl,vim,git\fR.
 .TP
