@@ -2,7 +2,7 @@
 
 Versions follow [semantic versioning](https://semver.org). Tags carry the bare version, such as `1.2.0`.
 
-## 1.3.0 (unreleased)
+## 1.3.0 (2026-11-20)
 
 - Safer: sticks now mask `secureboot-db.service`. Ubuntu runs it at every boot, and it appends Microsoft's Secure Boot
   revocation list to the firmware of whatever PC the stick is in. On a Windows PC with BitLocker that changes PCR 7
