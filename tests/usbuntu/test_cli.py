@@ -30,6 +30,7 @@ class TestParser:
         assert args.packages == ""
         assert args.device is None
         assert not args.no_force_password_change
+        assert not args.allow_secure_boot_updates
 
     def test_extras_repeat_and_accumulate(self) -> None:
         parser = _build_parser()
@@ -45,6 +46,11 @@ class TestParser:
         )
         assert args.remove_snap
         assert args.flavor == "minimal"
+
+    def test_allow_secure_boot_updates_flag(self) -> None:
+        parser = _build_parser()
+        args = parser.parse_args(["install", "ubuntu.iso", "--username", "james", "--allow-secure-boot-updates"])
+        assert args.allow_secure_boot_updates
 
     def test_no_command_prints_help(self) -> None:
         parser = _build_parser()

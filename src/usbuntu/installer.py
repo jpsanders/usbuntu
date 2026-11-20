@@ -417,6 +417,12 @@ class Installer:
         for extra in extras:
             for command in extra.post_commands:
                 lines.append(f"bash -lc {shlex.quote(command)}")
+        if not config.allow_secure_boot_updates:
+            # Ubuntu's secureboot-db.service runs sbkeysync at every boot and appends Microsoft's
+            # dbx update to the firmware of whatever PC the stick boots. That changes PCR 7, and a
+            # Windows install with BitLocker on that PC then asks for its recovery key. A portable
+            # stick must never write another machine's Secure Boot keys, so mask it.
+            lines.append("systemctl mask secureboot-db.service")
         lines += [
             "update-initramfs -u",
             f"useradd -m -s /bin/bash {shlex.quote(config.username)} 2>/dev/null || true",
@@ -484,6 +490,8 @@ class Installer:
             f"log in as {self.config.username}; you will be asked to set your own password"
             + (" at first login" if self.config.force_password_change else "")
         )
+        if not self.config.allow_secure_boot_updates:
+            _say("secureboot-db.service is masked: this stick never writes Secure Boot keys into the PCs it boots")
         _say("reboot, press your firmware's boot menu key (often F12) and pick the USB drive")
 
 

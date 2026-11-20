@@ -68,6 +68,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="purge snapd instead of keeping it; Firefox and the Snap Store go with it",
     )
     install.add_argument(
+        "--allow-secure-boot-updates",
+        action="store_true",
+        help=(
+            "let the stick write Secure Boot dbx updates into the firmware of every PC it boots; "
+            "off by default because that trips BitLocker recovery on Windows machines"
+        ),
+    )
+    install.add_argument(
         "--packages",
         default="",
         help="comma separated apt packages to add, such as curl,vim,git",
@@ -327,6 +335,7 @@ def main() -> None:
         apt_packages=apt_packages,
         extras=list(args.extras),
         assume_yes=args.yes,
+        allow_secure_boot_updates=args.allow_secure_boot_updates,
     )
     try:
         config.validate()

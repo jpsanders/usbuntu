@@ -40,6 +40,7 @@ class InstallConfig:
     apt_packages: list[str] = field(default_factory=list)
     extras: list[str] = field(default_factory=list)
     assume_yes: bool = False
+    allow_secure_boot_updates: bool = False
 
     def validate(self) -> None:
         """
@@ -81,6 +82,8 @@ class InstallConfig:
             f"Hostname:  {self.hostname}",
             f"User:      {self.username}",
             f"Snap:      {'removed' if self.remove_snap else 'kept'}",
+            "Secure Boot keys: "
+            + ("updated from Linux (secureboot-db on)" if self.allow_secure_boot_updates else "never written (secureboot-db masked)"),
         ]
         if self.apt_packages:
             lines.append(f"Apt:       {', '.join(self.apt_packages)}")
@@ -112,6 +115,7 @@ class InstallConfig:
                 "apt_packages": self.apt_packages,
                 "extras": self.extras,
                 "assume_yes": self.assume_yes,
+                "allow_secure_boot_updates": self.allow_secure_boot_updates,
             }
         )
 
@@ -138,6 +142,7 @@ class InstallConfig:
             apt_packages=list(data["apt_packages"]),
             extras=list(data["extras"]),
             assume_yes=bool(data["assume_yes"]),
+            allow_secure_boot_updates=bool(data.get("allow_secure_boot_updates", False)),
         )
         config.validate()
         return config

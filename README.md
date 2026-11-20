@@ -65,6 +65,7 @@ Every variable:
 | Full or reduced desktop | `--flavor full\|minimal` | `full` |
 | Language layers | `--language en` | `en` |
 | Snap | `--remove-snap` | kept |
+| Secure Boot key updates written to the PCs the stick boots | `--allow-secure-boot-updates` | never (masked) |
 | Extra apt packages | `--packages curl,vim,git` | none |
 | Bundled extras | `--with opencode`, `--with claude-code`, `--with build-tools` | none |
 | Target disk | `--device /dev/sda` | the one safe disk found |
@@ -131,6 +132,12 @@ Every step in that pipeline exists because its absence broke a real install:
 
 - The stick must be at least 8 GiB and the machine must boot with UEFI. The result boots with Secure Boot on or off,
   because the chain is the same signed shim Ubuntu ships.
+- **The stick never writes Secure Boot keys into the PCs it boots.** Ubuntu's `secureboot-db.service` runs at every
+  boot and appends Microsoft's revocation list (dbx) to the firmware of whatever machine it is in. On a Windows PC with
+  BitLocker that changes PCR 7, and the next Windows start asks for the 48 digit recovery key. usbuntu masks the service
+  by default. `--allow-secure-boot-updates` keeps it on; only use it for a stick that boots machines you have no
+  BitLocker on, or whose recovery keys you hold. On a stick made by an older usbuntu, run
+  `sudo systemctl mask --now secureboot-db.service` before you boot it on any Windows PC.
 - `--remove-snap` purges snapd and holds it back. Firefox and the Snap Store go with it; install a deb browser in
   `--packages` if you want one.
 - A failed run costs little: the completed system copy is marked on the stick and the next run resumes from it instead

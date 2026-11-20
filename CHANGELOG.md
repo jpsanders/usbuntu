@@ -2,6 +2,13 @@
 
 Versions follow [semantic versioning](https://semver.org). Tags carry the bare version, such as `1.2.0`.
 
+## 1.3.0 (unreleased)
+
+- Safer: sticks now mask `secureboot-db.service`. Ubuntu runs it at every boot, and it appends Microsoft's Secure Boot
+  revocation list to the firmware of whatever PC the stick is in. On a Windows PC with BitLocker that changes PCR 7
+  and Windows then demands its recovery key. `--allow-secure-boot-updates` restores the old behaviour. The install
+  summary says which one you got.
+
 ## 1.2.1 (2026-11-15)
 
 - On PyPI: `uv tool install usbuntu`, `pipx install usbuntu` or `pip install usbuntu`. Each GitHub release now

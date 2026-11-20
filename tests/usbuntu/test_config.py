@@ -103,3 +103,19 @@ class TestExtras:
     def test_resolve_unknown_key(self) -> None:
         with pytest.raises(ValueError, match="unknown extra"):
             resolve_extras(["nope"])
+
+
+class TestSecureBootUpdates:
+    def test_masked_by_default_and_round_trips(self, tmp_path: Path) -> None:
+        config = _config(tmp_path)
+        assert not config.allow_secure_boot_updates
+        assert "secureboot-db masked" in config.summary()
+        again = InstallConfig.from_json(_config(tmp_path, allow_secure_boot_updates=True).to_json())
+        assert again.allow_secure_boot_updates
+
+    def test_old_json_without_the_field_defaults_to_masked(self, tmp_path: Path) -> None:
+        import json
+
+        data = json.loads(_config(tmp_path).to_json())
+        del data["allow_secure_boot_updates"]
+        assert not InstallConfig.from_json(json.dumps(data)).allow_secure_boot_updates
