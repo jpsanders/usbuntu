@@ -1,0 +1,41 @@
+# Template B: comments on the pull request from the report Template A uploaded.
+# It runs in the base repository's context with a write token, so it NEVER checks out pull request code: it
+# downloads the report and hands it to `ruru post`, which checks the schema, checks that the pull request's head is
+# the commit this trusted event names, and escapes every string.
+name: ruru post
+
+on:
+  workflow_run:
+    workflows: [ruru]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  actions: read
+
+jobs:
+  post:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Download the report (data only)"
+        uses: actions/download-artifact@v4
+        with:
+          name: ruru-report
+          path: ruru
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: "Read the pull request number from the artifact"
+        id: pr
+        run: |
+          n=$(python3 -c 'import json; n = json.load(open("ruru/ruru-pr.json")).get("number")
+          print(n if isinstance(n, int) and n > 0 else "")')
+          echo "number=$n" >> "$GITHUB_OUTPUT"
+
+      - name: "ruru post"
+        uses: jpsanders/ruru-review@main
+        with:
+          run: post
+          report: ruru/ruru-report.json
+          pr: ${{ steps.pr.outputs.number }}

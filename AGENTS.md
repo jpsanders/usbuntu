@@ -9,6 +9,7 @@ Instructions for AI coding agents working on usbuntu itself. To use the tool, re
 make init-dev     # install the package and the development tools into the active environment
 make format       # apply black and isort
 make checks       # every check CI runs, in CI's order; run it before you say a change is done
+make ruru         # ruru reviews your branch against main: tamper audit, fail first, mutants (in checks)
 make man          # rebuild the man page and the packaged manual after editing docs/MANUAL.md
 ```
 

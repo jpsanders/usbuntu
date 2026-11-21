@@ -1,0 +1,42 @@
+# ruru reviews each pull request: a tamper audit of the tests, fail first for new tests, and mutants on the changed
+# lines (https://github.com/jpsanders/ruru-review). This job runs the pull request's code with a read only token, so
+# it is safe for forks; ruru-post.yml comments from its report.
+name: ruru
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ruru:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code with history"
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.15"
+
+      - name: "Install the package and its test tools"
+        run: python -m pip install -e ".[dev]"
+
+      - name: "ruru"
+        uses: jpsanders/ruru-review@main
+        with:
+          mode: gate
+          report: ruru/ruru-report.json
+
+      - name: "Upload the report for the posting workflow"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruru-report
+          path: ruru/
+          if-no-files-found: ignore
