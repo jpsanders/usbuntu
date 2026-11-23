@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Download the report (data only)"
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ruru-report
           path: ruru
@@ -34,7 +34,7 @@ jobs:
           echo "number=$n" >> "$GITHUB_OUTPUT"
 
       - name: "ruru post"
-        uses: jpsanders/ruru-review@main
+        uses: jpsanders/ruru-review@1.0.0
         with:
           run: post
           report: ruru/ruru-report.json

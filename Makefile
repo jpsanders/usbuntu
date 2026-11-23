@@ -118,7 +118,7 @@ checks: isort-check black-check ec docstyle lint mypy bandit man-check pytest ru
 # ruru reviews the change on this branch against main: a tamper audit of the tests, fail first for new tests, and
 # mutants on the changed lines (https://github.com/jpsanders/ruru-review). On main with nothing changed it passes at
 # once. `make checks RURU=:` skips it; RURU_BASE and RURU_MODE override the defaults.
-RURU ?= uvx --python 3.14 --from git+https://github.com/jpsanders/ruru-review@main ruru
+RURU ?= uvx --python 3.14 --from git+https://github.com/jpsanders/ruru-review@1.0.0 ruru
 RURU_BASE ?= origin/main
 RURU_MODE ?= gate
 
